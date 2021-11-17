@@ -16,15 +16,22 @@ class Stream:
     """
     asyncio stream class
     """
-
-    async def __init__(self, connection_handler, server=True) -> None:
-        
+    
+    @classmethod
+    async def create(cls, connection_handler, server=True):
+        """
+        create a new stream
+        """
+        self = cls()
+        self.server = server
         if server:
             self.reader, self.writer = await asyncio.start_server(
                 connection_handler,
                 "localhost",
                 0,
-                )
+            )
+        return self
+    
 
 
 class App(object):
@@ -32,7 +39,7 @@ class App(object):
     tkinter app class
     """
 
-    async def __init__(self) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         # get current path
@@ -72,14 +79,13 @@ class App(object):
         with open(private_key_path, "rb") as file:
             self.private_key = rsa.PrivateKey.load_pkcs1(file.read())
 
-        # create socket lists
+        # create stream lists
         self.connections = []
         self.pending_connections = []
 
-        # create socket server
-        logging.info("Creating socket server")
-        self.main_socket = self.create_socket()
-        self.connections.remove(self.main_socket)
+        # create stream server
+        logging.info("Creating stream server")
+        self.main_stream = await Stream(self.main_stream_handler)
 
         # start tkinter
         self.root = tkinter.Tk()
@@ -126,7 +132,20 @@ class App(object):
         ).grid(column=2, row=1, sticky=(tkinter.W, tkinter.E))
 
 
-    async def
+    async def main_stream_handler(self, reader, writer):
+        """
+        stream handler for main stream
+        """
+
+        # log connection
+        addr = writer.get_extra_info('peername')
+        logging.info("Connection from %s", addr)
+
+        # send public key
+        logging.info("Sending public key")
+        writer.write(self.public_key.save_pkcs1())
+        await writer.drain()
+
 
     @staticmethod
     async def get_current_ip() -> str:

@@ -34,6 +34,7 @@ class Server:
             "localhost",
             0,
         )
+        await self.server.start_serving()
         return self
 
 
@@ -143,6 +144,7 @@ class App(object):
         logging.info("Creating stream server")
         self.main_stream = await Server.create(self.main_stream_handler)
 
+
         # get ip address
         self.ip_address.set(
             f"{await self.get_current_ip()}:{self.main_stream.server.sockets[0].getsockname()[1]}"
@@ -175,7 +177,6 @@ class App(object):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api6.ipify.org') as response:
                 return await response.text()
-
 
 
     @staticmethod

@@ -12,26 +12,29 @@ import tkinter.ttk
 import rsa
 import aiohttp
 
-class Stream:
+class Server:
     """
-    asyncio stream class
+    asyncio server class
     """
-    
+
+
+    def __init__(self):
+        self.server = None
+
+
     @classmethod
-    async def create(cls, connection_handler, server=True):
+    async def create(cls, connection_handler):
         """
-        create a new stream
+        create a new server
         """
-        self = cls()
-        self.server = server
-        if server:
-            self.reader, self.writer = await asyncio.start_server(
-                connection_handler,
-                "localhost",
-                0,
-            )
+
+        self = Server()
+        self.server = await asyncio.start_server(
+            connection_handler,
+            "localhost",
+            0,
+        )
         return self
-    
 
 
 class App(object):
@@ -83,10 +86,6 @@ class App(object):
         self.connections = []
         self.pending_connections = []
 
-        # create stream server
-        logging.info("Creating stream server")
-        self.main_stream = await Stream(self.main_stream_handler)
-
         # start tkinter
         self.root = tkinter.Tk()
         self.root.title("Symmetrical Unbrella")
@@ -100,15 +99,16 @@ class App(object):
             pady=5,
         )
 
-        # get ip address
-        self.ip_address = f"{self.get_current_ip()}:{self.main_socket.getsockname()[1]}"
+        # initialise variables
+        self.main_stream = None
+        self.ip_address = tkinter.StringVar()
 
         # display current ip addresses and port
         tkinter.Label(
             self.mainframe,
             text="Current IP Address: "
         ).grid(column=0, row=0, sticky=tkinter.W)
-        address_label = tkinter.Label(self.mainframe, text=f"{self.ip_address}")
+        address_label = tkinter.Label(self.mainframe, textvariable=self.ip_address)
         address_label.grid(column=1, row=0, sticky=(tkinter.W, tkinter.E))
 
         # create button to copy ip address to clipboard
@@ -124,12 +124,27 @@ class App(object):
         address_entry = tkinter.ttk.Entry(self.mainframe, width=7, textvariable=connect_to)
         address_entry.grid(column=1, row=1, sticky=(tkinter.W, tkinter.E))
 
-        # create connect button
-        tkinter.Button(
-            self.mainframe,
-            text="Connect",
-            command=lambda: self.connect(connect_to.get())
-        ).grid(column=2, row=1, sticky=(tkinter.W, tkinter.E))
+        # # create connect button
+        # tkinter.Button(
+        #     self.mainframe,
+        #     text="Connect",
+        #     command=lambda: self.connect(connect_to.get())
+        # ).grid(column=2, row=1, sticky=(tkinter.W, tkinter.E))
+
+
+    @classmethod
+    async def create(cls) -> None:
+        """
+        create a new app
+        """
+        self = App()
+
+        # create stream server
+        logging.info("Creating stream server")
+        self.main_stream = await Server(self.main_stream_handler)
+
+        # get ip address
+        self.ip_address = f"{await self.get_current_ip()}:{self.main_stream.x_ip}"
 
 
     async def main_stream_handler(self, reader, writer):
@@ -180,9 +195,15 @@ class App(object):
         self.root.update_idletasks()
 
 
+async def main():
+    """
+    main function
+    """
+    app = App()
+    while True:
+        await app.update()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    app = App()
-    while True:
-        app.update()
+    asyncio.run(main())

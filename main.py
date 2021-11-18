@@ -141,10 +141,15 @@ class App(object):
 
         # create stream server
         logging.info("Creating stream server")
-        self.main_stream = await Server(self.main_stream_handler)
+        self.main_stream = await Server.create(self.main_stream_handler)
 
         # get ip address
-        self.ip_address = f"{await self.get_current_ip()}:{self.main_stream.x_ip}"
+        self.ip_address.set(
+            f"{await self.get_current_ip()}:{self.main_stream.server.sockets[0].getsockname()[1]}"
+        )
+
+        # return self
+        return self
 
 
     async def main_stream_handler(self, reader, writer):
@@ -199,7 +204,7 @@ async def main():
     """
     main function
     """
-    app = App()
+    app = await App.create()
     while True:
         await app.update()
 

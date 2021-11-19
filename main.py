@@ -5,61 +5,15 @@ The main file of the program.
 """
 
 import asyncio
-import ipaddress
 import logging
-import os
 import socket
 import tkinter
 import tkinter.ttk
 
 import aiohttp
 import aiohttp.web
-import rsa
 
-
-def load_keys():
-    """
-    load keys
-    """
-
-    # get current path
-    current_path = os.path.dirname(os.path.realpath(__file__))
-
-    # create ./env/ directory
-    logging.info("Creating ./env/ directory")
-    env_path = os.path.join(current_path, 'env')
-    if not os.path.exists(env_path):
-        os.makedirs(env_path)
-
-    # check if ./env/key.pub exists
-    logging.info("Checking if ./env/key.pub exi sts")
-    if not os.path.exists(os.path.join(env_path, 'key.pub')):
-
-        # generate key
-        logging.info("Generating key")
-        (pubkey, privkey) = rsa.newkeys(2048)
-
-        # save public key
-        with open(os.path.join(env_path, 'key.pub'), 'wb') as key_file:
-            key_file.write(pubkey.save_pkcs1())
-
-        # save private key
-        with open(os.path.join(env_path, 'key'), 'wb') as key_file:
-            key_file.write(privkey.save_pkcs1())
-
-    # load public key
-    logging.info("Loading public key")
-    public_key_path = os.path.join(env_path, 'key.pub')
-    with open(public_key_path, "rb") as file:
-        public_key = rsa.PublicKey.load_pkcs1(file.read())
-
-    # load private key
-    logging.info("Loading private key")
-    private_key_path = os.path.join(env_path, 'key')
-    with open(private_key_path, "rb") as file:
-        private_key = rsa.PrivateKey.load_pkcs1(file.read())
-
-    return public_key, private_key
+import src.datastore
 
 
 class Server:
@@ -74,17 +28,24 @@ class Server:
         self.runner = None
 
         # load keys
-        public_key, _ = load_keys()
-
-        # check key
-        assert isinstance(public_key, rsa.PublicKey)
+        public_key = src.datastore.DataStore().get_keys()[1]
 
         # convert public key to text
         text = public_key.save_pkcs1().decode('utf-8')
 
         @self.routes.get('/')
         async def hello(request):
+            str(request)
             return aiohttp.web.Response(text=text)
+
+        @self.routes.post("/ping")
+        async def ping(request):
+            str(request)
+            return aiohttp.web.Response(text="pong")
+
+        @self.routes.get("/echo")
+        async def echo(request):
+            return aiohttp.web.Response(text=request.query['text'])
 
 
     @classmethod
@@ -108,6 +69,7 @@ class Server:
             sock.close()
 
         # start server
+        logging.info("Starting server on port %d", self.port)
         app = aiohttp.web.Application()
         app.add_routes(self.routes)
         self.runner = aiohttp.web.AppRunner(app)
@@ -123,9 +85,6 @@ class App(object):
 
     def __init__(self) -> None:
         super().__init__()
-
-        # get keys
-        load_keys()
 
         # create stream lists
         self.connections = []

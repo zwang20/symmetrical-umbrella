@@ -17,6 +17,51 @@ import aiohttp.web
 import rsa
 
 
+def load_keys():
+    """
+    load keys
+    """
+
+    # get current path
+    current_path = os.path.dirname(os.path.realpath(__file__))
+
+    # create ./env/ directory
+    logging.info("Creating ./env/ directory")
+    env_path = os.path.join(current_path, 'env')
+    if not os.path.exists(env_path):
+        os.makedirs(env_path)
+
+    # check if ./env/key.pub exists
+    logging.info("Checking if ./env/key.pub exi sts")
+    if not os.path.exists(os.path.join(env_path, 'key.pub')):
+
+        # generate key
+        logging.info("Generating key")
+        (pubkey, privkey) = rsa.newkeys(2048)
+
+        # save public key
+        with open(os.path.join(env_path, 'key.pub'), 'wb') as key_file:
+            key_file.write(pubkey.save_pkcs1())
+
+        # save private key
+        with open(os.path.join(env_path, 'key'), 'wb') as key_file:
+            key_file.write(privkey.save_pkcs1())
+
+    # load public key
+    logging.info("Loading public key")
+    public_key_path = os.path.join(env_path, 'key.pub')
+    with open(public_key_path, "rb") as file:
+        public_key = rsa.PublicKey.load_pkcs1(file.read())
+
+    # load private key
+    logging.info("Loading private key")
+    private_key_path = os.path.join(env_path, 'key')
+    with open(private_key_path, "rb") as file:
+        private_key = rsa.PrivateKey.load_pkcs1(file.read())
+
+    return public_key, private_key
+
+
 class Server:
     """
     aiohttp server class
@@ -28,9 +73,18 @@ class Server:
         self.routes = aiohttp.web.RouteTableDef()
         self.runner = None
 
+        # load keys
+        public_key, _ = load_keys()
+
+        # check key
+        assert isinstance(public_key, rsa.PublicKey)
+
+        # convert public key to text
+        text = public_key.save_pkcs1().decode('utf-8')
+
         @self.routes.get('/')
         async def hello(request):
-            return aiohttp.web.Response(text="1")
+            return aiohttp.web.Response(text=text)
 
 
     @classmethod
@@ -70,42 +124,8 @@ class App(object):
     def __init__(self) -> None:
         super().__init__()
 
-        # get current path
-        self.current_path = os.path.dirname(os.path.realpath(__file__))
-
-        # create ./env/ directory
-        logging.info("Creating ./env/ directory")
-        env_path = os.path.join(self.current_path, 'env')
-        if not os.path.exists(env_path):
-            os.makedirs(env_path)
-
-        # check if ./env/key.pub exists
-        logging.info("Checking if ./env/key.pub exists")
-        if not os.path.exists(os.path.join(env_path, 'key.pub')):
-
-            # generate key
-            logging.info("Generating key")
-            (self.pubkey, self.privkey) = rsa.newkeys(2048)
-
-            # save public key
-            with open(os.path.join(env_path, 'key.pub'), 'wb') as key_file:
-                key_file.write(self.pubkey.save_pkcs1())
-
-            # save private key
-            with open(os.path.join(env_path, 'key'), 'wb') as key_file:
-                key_file.write(self.privkey.save_pkcs1())
-
-        # load public key
-        logging.info("Loading public key")
-        public_key_path = os.path.join(env_path, 'key.pub')
-        with open(public_key_path, "rb") as file:
-            self.public_key = rsa.PublicKey.load_pkcs1(file.read())
-
-        # load private key
-        logging.info("Loading private key")
-        private_key_path = os.path.join(env_path, 'key')
-        with open(private_key_path, "rb") as file:
-            self.private_key = rsa.PrivateKey.load_pkcs1(file.read())
+        # get keys
+        load_keys()
 
         # create stream lists
         self.connections = []

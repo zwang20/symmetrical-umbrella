@@ -1,0 +1,78 @@
+name: Build and Release
+
+concurrency: build-and-release-${{ github.ref }}
+
+on:
+  push:
+    branches: [master, experimental]
+  
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Build on unix
+      if: matrix.os != 'windows-latest'
+      run: |
+        pyinstaller --onefile ./main.py
+        mv dist/main ./main
+        chmod +x main
+        zip -r ${{ matrix.os }}.zip main certs root_key.pub
+    - name: Build on windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        pyinstaller --onefile ./main.py
+        mv dist/main.exe ./main.exe
+        Compress-Archive main.exe windows-latest.zip
+        Compress-Archive root_key.pub -Update windows-latest.zip
+        Compress-Archive certs -Update windows-latest.zip
+    - name: Upload build
+      uses: actions/upload-artifact@v2
+      with:
+        name: "${{ matrix.os }}"
+        path: "${{ matrix.os }}.zip"
+        retention-days: 1
+  release:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Download builds
+      uses: actions/download-artifact@v2
+    - name: Release stable builds
+      if: github.ref == 'refs/heads/master'
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-stable"
+        title: "Latest Stable Release"
+        prerelease: false
+        files: |
+          ubuntu-latest/ubuntu-latest.zip
+          macos-latest/macos-latest.zip
+          windows-latest/windows-latest.zip
+    - name: Release experimental builds
+      if: github.ref == 'refs/heads/experimental'
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-experimental"
+        title: "Latest Experimental Release"
+        prerelease: true
+        files: |
+          ubuntu-latest/ubuntu-latest.zip
+          macos-latest/macos-latest.zip
+          windows-latest/windows-latest.zip

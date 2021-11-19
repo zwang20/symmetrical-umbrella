@@ -4,7 +4,7 @@ concurrency: build-and-release-${{ github.ref }}
 
 on:
   push:
-    branches: [master, experimental]
+    branches: [main, experimental]
   
 jobs:
   build:

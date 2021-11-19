@@ -53,7 +53,7 @@ jobs:
     - name: Download builds
       uses: actions/download-artifact@v2
     - name: Release stable builds
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/main'
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"

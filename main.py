@@ -15,7 +15,6 @@ import aiohttp.web
 
 import src.datastore
 
-
 class Server:
     """
     aiohttp server class
@@ -28,7 +27,7 @@ class Server:
         self.runner = None
 
         # load keys
-        public_key = src.datastore.DataStore().get_keys()[1]
+        public_key = src.datastore.DataStore().get_keys()[0]
 
         # convert public key to text
         text = public_key.save_pkcs1().decode('utf-8')

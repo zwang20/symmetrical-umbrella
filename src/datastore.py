@@ -30,8 +30,8 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
-        
+        current_path = os.getcwd()
+
         # check if ./data/ directory exists
         data_path = os.path.join(current_path, 'data')
         if not os.path.exists(data_path):
@@ -42,8 +42,8 @@ class DataStore:
         data_file_path = os.path.join(data_path, 'data.json')
         if not os.path.exists(data_file_path):
             logging.info('Creating data/data.json')
-            with open(data_file_path, 'wb') as data_file:
-                json.dump(self.initial_data, data_file)
+            with open(data_file_path, 'w', encoding="utf-8") as data_file:
+                json.dump(self.initial_data, data_file, indent=4)
 
         # check if ./data/keys/ directory exists
         keys_path = os.path.join(data_path, 'keys')
@@ -66,7 +66,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get data path
         data_path = os.path.join(current_path, 'data')
@@ -90,7 +90,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get data path
         data_path = os.path.join(current_path, 'data')
@@ -99,8 +99,8 @@ class DataStore:
         data_file_path = os.path.join(data_path, 'data.json')
 
         # set data
-        with open(data_file_path, 'wb') as data_file:
-            json.dump(data, data_file)
+        with open(data_file_path, 'w', encoding="utf-8") as data_file:
+            json.dump(data, data_file, indent=4)
 
 
     def _generate_keys(self):
@@ -111,7 +111,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get data path
         data_path = os.path.join(current_path, 'data')
@@ -139,7 +139,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get data path
         data_path = os.path.join(current_path, 'data')
@@ -171,7 +171,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get data path
         data_path = os.path.join(current_path, 'data')
@@ -203,7 +203,7 @@ class DataStore:
         """
 
         # get current path
-        current_path = os.path.dirname(os.getcwd())
+        current_path = os.getcwd()
 
         # get root key path
         root_key_file_path = os.path.join(current_path, 'root_key.pub')

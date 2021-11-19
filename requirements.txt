@@ -2,3 +2,5 @@ aiohttp
 rsa
 isort
 pytest
+pyinstaller
+pylint

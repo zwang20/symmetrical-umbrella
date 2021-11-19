@@ -4,37 +4,61 @@ main.py
 The main file of the program.
 """
 
-import os
 import asyncio
+import ipaddress
 import logging
+import os
+import socket
 import tkinter
 import tkinter.ttk
-import rsa
+
 import aiohttp
+import aiohttp.web
+import rsa
+
 
 class Server:
     """
-    asyncio server class
+    aiohttp server class
     """
 
 
     def __init__(self):
-        self.server = None
+        self.port = 0
+        self.routes = aiohttp.web.RouteTableDef()
+        self.runner = None
+
+        @self.routes.get('/')
+        async def hello(request):
+            return aiohttp.web.Response(text="1")
 
 
     @classmethod
-    async def create(cls, connection_handler):
+    async def create(cls):
         """
         create a new server
         """
 
-        self = Server()
-        self.server = await asyncio.start_server(
-            connection_handler,
-            "localhost",
-            0,
-        )
-        await self.server.start_serving()
+        self = cls()
+
+        # get free port
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+
+            # bind to free port
+            sock.bind(('', 0))
+
+            # save port
+            self.port = sock.getsockname()[1]
+
+            # close socket
+            sock.close()
+
+        # start server
+        app = aiohttp.web.Application()
+        app.add_routes(self.routes)
+        self.runner = aiohttp.web.AppRunner(app)
+
+        # return server
         return self
 
 
@@ -101,7 +125,7 @@ class App(object):
         )
 
         # initialise variables
-        self.main_stream = None
+        self.main_server = None
         self.ip_address = tkinter.StringVar()
 
         # display current ip addresses and port
@@ -142,31 +166,16 @@ class App(object):
 
         # create stream server
         logging.info("Creating stream server")
-        self.main_stream = await Server.create(self.main_stream_handler)
+        self.main_server = await Server.create()
 
 
         # get ip address
         self.ip_address.set(
-            f"{await self.get_current_ip()}:{self.main_stream.server.sockets[0].getsockname()[1]}"
+            f"{await self.get_current_ip()}:{self.main_server.port}"
         )
 
         # return self
         return self
-
-
-    async def main_stream_handler(self, reader, writer):
-        """
-        stream handler for main stream
-        """
-
-        # log connection
-        addr = writer.get_extra_info('peername')
-        logging.info("Connection from %s", addr)
-
-        # send public key
-        logging.info("Sending public key")
-        writer.write(self.public_key.save_pkcs1())
-        await writer.drain()
 
 
     @staticmethod
@@ -174,9 +183,18 @@ class App(object):
         """
         return the current ip address
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://api6.ipify.org') as response:
-                return await response.text()
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://api6.ipify.org') as response:
+                    return await response.text()
+        except aiohttp.client_exceptions.ClientConnectorError:
+            pass
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://api4.ipify.org') as response:
+                    return await response.text()
+        except aiohttp.client_exceptions.ClientConnectorError:
+            return "error"
 
 
     @staticmethod
@@ -206,8 +224,14 @@ async def main():
     main function
     """
     app = await App.create()
+
+    await app.main_server.runner.setup()
+    site = aiohttp.web.TCPSite(app.main_server.runner, '', app.main_server.port)
+    await site.start()
+
     while True:
         await app.update()
+        await asyncio.sleep(0.1)
 
 
 if __name__ == '__main__':

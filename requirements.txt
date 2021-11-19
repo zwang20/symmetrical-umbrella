@@ -1,2 +1,4 @@
 aiohttp
 rsa
+isort
+pytest

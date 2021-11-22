@@ -25,7 +25,7 @@ cert = {
 }
 
 # save cert
-with open('cert.json', 'w', encoding="utf-8") as cert_file:
+with open(f'{user_id}.json', 'w', encoding="utf-8") as cert_file:
     json.dump(cert, cert_file, indent=4)
 
 # load private key

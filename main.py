@@ -60,7 +60,7 @@ class Server:
 
             # load id
             with open(id_path, 'r', encoding="utf-8") as id_file:
-                self_id = id_file.read()
+                self_id = id_file.readline()
 
             # get cert path
             cert_path = os.path.join(current_path, 'certs', f"{self_id}.json")
@@ -81,7 +81,7 @@ class Server:
 
             # load id
             with open(id_path, 'r', encoding="utf-8") as id_file:
-                self_id = id_file.read()
+                self_id = id_file.readline()
 
             # get signature path
             sig_path = os.path.join(current_path, 'certs', f"{self_id}.pem")

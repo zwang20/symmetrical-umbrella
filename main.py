@@ -91,6 +91,10 @@ class Server:
                 signiture = str(base64.b64encode(sig_file.read()))
 
             return aiohttp.web.Response(text=signiture)
+        
+        @self.routes.get("/routes")
+        async def routes(request):
+            return aiohttp.web.Response(text=str(self.routes._items))
 
 
     @classmethod

@@ -16,6 +16,7 @@ import aiohttp
 import aiohttp.web
 
 import src.datastore
+import src.helper
 
 
 class Server:
@@ -134,7 +135,7 @@ class Server:
 
 class App:
     """
-    tkinter app class
+    app class
     """
 
     def __init__(self) -> None:
@@ -203,31 +204,11 @@ class App:
 
         # get ip address
         self.ip_address.set(
-            f"{await self.get_current_ip()}:{self.main_server.port}"
+            f"{await src.helper.get_current_ip()}:{self.main_server.port}"
         )
 
         # return self
         return self
-
-
-    @staticmethod
-    async def get_current_ip() -> str:
-        """
-        return the current ip address
-        """
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get('https://api6.ipify.org') as response:
-                    return await response.text()
-        except aiohttp.client_exceptions.ClientConnectorError:
-            pass
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get('https://api4.ipify.org') as response:
-                    return await response.text()
-        except aiohttp.client_exceptions.ClientConnectorError:
-            return "error"
-
 
     @staticmethod
     def copy_to_clipboard(text: str) -> None:

@@ -132,13 +132,12 @@ class Server:
         return self
 
 
-class App(object):
+class App:
     """
     tkinter app class
     """
 
     def __init__(self) -> None:
-        super().__init__()
 
         # create stream lists
         self.connections = []

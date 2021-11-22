@@ -48,7 +48,7 @@ class Server:
         @self.routes.get("/echo")
         async def echo(request):
             return aiohttp.web.Response(text=request.query['text'])
-        
+
         @self.routes.get("/cert")
         async def cert(request):
 
@@ -60,17 +60,17 @@ class Server:
 
             # load id
             with open(id_path, 'r', encoding="utf-8") as id_file:
-                id = id_file.read()
-            
+                self_id = id_file.read()
+
             # get cert path
-            cert_path = os.path.join(current_path, 'certs', f"{id}.json")
+            cert_path = os.path.join(current_path, 'certs', f"{self_id}.json")
 
             # load cert
             with open(cert_path, 'r', encoding="utf-8") as cert_file:
                 cert = cert_file.read()
-        
+
             return aiohttp.web.Response(text=cert)
-        
+
         @self.routes.get("/sig")
         async def sig(request):
             # get current path
@@ -81,20 +81,20 @@ class Server:
 
             # load id
             with open(id_path, 'r', encoding="utf-8") as id_file:
-                id = id_file.read()
-            
+                self_id = id_file.read()
+
             # get signature path
-            sig_path = os.path.join(current_path, 'certs', f"{id}.pem")
+            sig_path = os.path.join(current_path, 'certs', f"{self_id}.pem")
 
             # load signature
             with open(sig_path, 'rb') as sig_file:
                 signiture = str(base64.b64encode(sig_file.read()))
 
             return aiohttp.web.Response(text=signiture)
-        
+
         @self.routes.get("/routes")
         async def routes(request):
-            return aiohttp.web.Response(text=str(self.routes._items))
+            return aiohttp.web.Response(text=str('\n'.join(str(route) for route in self.routes)))
 
 
     @classmethod

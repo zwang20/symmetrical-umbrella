@@ -75,6 +75,8 @@ class Server:
 
         @self.routes.get("/sig")
         async def sig(request):
+            str(request)
+
             # get current path
             current_path = os.getcwd()
 
@@ -96,6 +98,7 @@ class Server:
 
         @self.routes.get("/routes")
         async def routes(request):
+            str(request)
             return aiohttp.web.Response(text='\n'.join(str(route) for route in self.routes))
 
 

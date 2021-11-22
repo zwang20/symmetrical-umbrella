@@ -5,7 +5,9 @@ The main file of the program.
 """
 
 import asyncio
+import base64
 import logging
+import os
 import socket
 import tkinter
 import tkinter.ttk
@@ -14,6 +16,7 @@ import aiohttp
 import aiohttp.web
 
 import src.datastore
+
 
 class Server:
     """
@@ -45,6 +48,49 @@ class Server:
         @self.routes.get("/echo")
         async def echo(request):
             return aiohttp.web.Response(text=request.query['text'])
+        
+        @self.routes.get("/cert")
+        async def cert(request):
+
+            # get current path
+            current_path = os.getcwd()
+
+            # id path
+            id_path = os.path.join(current_path, 'data', "id")
+
+            # load id
+            with open(id_path, 'r', encoding="utf-8") as id_file:
+                id = id_file.read()
+            
+            # get cert path
+            cert_path = os.path.join(current_path, 'certs', f"{id}.json")
+
+            # load cert
+            with open(cert_path, 'r', encoding="utf-8") as cert_file:
+                cert = cert_file.read()
+        
+            return aiohttp.web.Response(text=cert)
+        
+        @self.routes.get("/sig")
+        async def sig(request):
+            # get current path
+            current_path = os.getcwd()
+
+            # id path
+            id_path = os.path.join(current_path, 'data', "id")
+
+            # load id
+            with open(id_path, 'r', encoding="utf-8") as id_file:
+                id = id_file.read()
+            
+            # get signature path
+            sig_path = os.path.join(current_path, 'certs', f"{id}.pem")
+
+            # load signature
+            with open(sig_path, 'rb') as sig_file:
+                signiture = str(base64.b64encode(sig_file.read()))
+
+            return aiohttp.web.Response(text=signiture)
 
 
     @classmethod

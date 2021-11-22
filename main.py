@@ -94,7 +94,7 @@ class Server:
 
         @self.routes.get("/routes")
         async def routes(request):
-            return aiohttp.web.Response(text=str('\n'.join(str(route) for route in self.routes)))
+            return aiohttp.web.Response(text='\n'.join(str(route) for route in self.routes))
 
 
     @classmethod

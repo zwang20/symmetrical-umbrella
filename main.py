@@ -109,7 +109,7 @@ class Server:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 
             # bind to free port
-            sock.bind(('', 0))
+            sock.bind(('127.0.0.1', 0))
 
             # save port
             self.port = sock.getsockname()[1]

@@ -47,10 +47,12 @@ class Server:
 
         @self.routes.get("/echo")
         async def echo(request):
+            str(request)
             return aiohttp.web.Response(text=request.query['text'])
 
         @self.routes.get("/cert")
         async def cert(request):
+            str(request)
 
             # get current path
             current_path = os.getcwd()

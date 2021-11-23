@@ -21,6 +21,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Running pylint
+    - name: Running pylint on unix
+      if: matrix.os != 'windows-latest'
       run: |
         find . -type f -name "*.py" | xargs pylint
+    - name: Running pylint on windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        forfiles /M *.py /S /C "cmd /c pylint @PATH"

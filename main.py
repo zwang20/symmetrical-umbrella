@@ -164,7 +164,7 @@ class App:
         # display current ip addresses and port
         tkinter.Label(
             self.mainframe,
-            text="Current IP Address: "
+            text="Current IP Address: ",
         ).grid(column=0, row=0, sticky=tkinter.W)
         address_label = tkinter.Label(self.mainframe, textvariable=self.ip_address)
         address_label.grid(column=1, row=0, sticky=(tkinter.W, tkinter.E))
